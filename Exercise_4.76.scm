@@ -52,15 +52,6 @@
 
 
 (define (compatible? f1 f2)
-    (define (same? v1 v2)
-        (cond ((and (pair? v1) (pair? v2))
-		  (if (same? (car v1) (car v2))
-		      (same? (cdr v1) (cdr v2))
-		      #f))
-	      ((equal? v1 v2) #t)
-	      (else #f)))
-
-
     (define (merge f1 f2)
         (define (iter old new)
 	    (if (empty-frame? old)
@@ -80,7 +71,7 @@
 	    (let ((binding (first-binding frame)))
 	        (let ((var (binding-variable binding))
 		      (val (binding-value binding)))
-		    (if (same? val
+		    (if (equal? val
 		               (binding-in-frame var target-frame))
 			(compare (rest-bindings frame)
 				 target-frame)
