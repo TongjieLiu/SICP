@@ -58,7 +58,7 @@
 	        (let ((assoc name register-table))
 		    (if val
 			(cadr val)
-			(error "Unknown register: "
+			(error "Unknown register:"
 			       name))))
 
             (define (execute)

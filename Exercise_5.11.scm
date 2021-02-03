@@ -77,7 +77,7 @@
 
             (define (allocate-register name)
 	        (if (assoc name register-table)
-		    (error "Multiply defined register: "
+		    (error "Multiply defined register:"
 			   name)
 		    (begin (set! register-table
 			         (cons (list name
@@ -94,7 +94,7 @@
 	        (let ((val (assoc name register-table)))
 		    (if val
 			(cadr val)
-			(error "Unknown register: "
+			(error "Unknown register:"
 			       name))))
 
 
