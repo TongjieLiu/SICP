@@ -1,0 +1,91 @@
+; An exercise solution for the SICP, 2nd edition
+;
+; Copyright (C) 2021 Tongjie Liu <tongjieandliu@gmail.com>.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;a
+(controller
+    (assign tree (op read))
+    (assign continue (label count-leaves-done))
+count-leaves-loop
+    (test (op null?) (reg tree))
+    (branch (label null-base-case))
+
+    (assign t (op pair?) (reg tree))
+    (test (op not) (reg t))
+    (branch (label not-pair-base-case))
+
+    (save continue)
+    (assign continue (label after-first-subproblem))
+    (save tree)
+    (assign tree (op car) (reg tree))
+    (goto (label count-leaves-loop))
+after-first-subproblem
+    (restore tree)
+    (assign tree (op cdr) (reg tree))
+    (save val)
+    (assign continue (label after-second-subproblem))
+    (goto (label count-leaves-loop))
+after-second-subproblem
+    (restore t)
+    (assign val (op +) (reg t) (reg val))
+    (restore continue)
+    (goto (reg continue))
+null-base-case
+    (assign val (const 0))
+    (goto (reg continue))
+not-pair-base-case
+    (assign val (const 1))
+    (goto (reg continue))
+count-leaves-done
+    (perform (op print) (reg val)))
+
+
+
+;b
+(controller
+    (assign tree (op read))
+    (assign n (const 0))
+    (assign continue (label count-leaves-done))
+count-leaves-loop
+    (test (op null?) (reg tree))
+    (branch (label null-base-case))
+
+    (assign t (op pair?) (reg tree))
+    (test (op not) (reg t))
+    (branch (label not-pair-base-case))
+
+    (save continue)
+    (assign continue (label after-first-subproblem))
+    (save tree)
+    (assign tree (op car) (reg tree))
+    (goto (label count-leaves-loop))
+after-first-subproblem
+    (restore tree)
+    (assign tree (op cdr) (reg tree))
+    (assign n (reg val))
+    (assign continue (label after-second-subproblem))
+    (goto (label count-leaves-loop))
+after-second-subproblem
+    (restore continue)
+    (goto (reg continue))
+null-base-case
+    (assign val (reg n))
+    (goto (reg continue))
+not-pair-base-case
+    (assign val (op +) (reg n) (const 1))
+    (goto (reg continue))
+count-leaves-done
+    (perform (op print) (reg val)))
