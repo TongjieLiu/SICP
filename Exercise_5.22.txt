@@ -1,0 +1,75 @@
+; An exercise solution for the SICP, 2nd edition
+;
+; Copyright (C) 2021 Tongjie Liu <tongjieandliu@gmail.com>.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+; (define (append a b)
+;     (if (null? a)
+;         b
+;         (cons (car a) (append (cdr a) b))))
+(controller
+    (assign a (op read))
+    (assign b (op read))
+    (assign continue (label append-done))
+append-loop
+    (test (op null?) (reg a))
+    (branch (label base-case))
+
+    (save continue)
+    (assign continue (label after-append))
+    (save a)
+    (assign a (op cdr) (reg a))
+    (goto (label append-loop))
+after-append
+    (restore a)
+    (assign a (op car) (reg a))
+    (assign val (op cons) (reg a) (reg val))
+    (restore continue)
+    (goto (reg continue))
+base-case
+    (assign val (reg b))
+    (goto (reg continue))
+append-done
+    (perform (op print) (reg val)))
+
+
+
+; (define (append! a b)
+;     (set-cdr! (last-pair a) b)
+;     a)
+;
+; (define (last-pair x)
+;     (if (null? (cdr x))
+;         x
+;         (last-pair (cdr x))))
+(controller
+    (assign a (op read))
+    (assign b (op read))
+    (assign x (reg a))
+    (assign continue (label append-continue))
+    (goto (label last-pair))
+last-pair
+    (assign t (op cdr) (reg x))
+    (test (op null?) (reg t))
+    (branch (label last-pair-done))
+
+    (assign x (op cdr) (reg x))
+    (goto (label last-pair))
+last-pair-done
+    (assign val (reg x))
+    (goto (reg continue))
+append-continue
+    (perform (op set-cdr!) (reg val) (reg b))
+    (perform (op print) (reg a)))
