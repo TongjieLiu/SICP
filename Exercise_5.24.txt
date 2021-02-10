@@ -1,0 +1,140 @@
+; An exercise solution for the SICP, 2nd edition
+;
+; Copyright (C) 2021 Tongjie Liu <tongjieandliu@gmail.com>.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+eval
+    (test (op expression-self-evaluating?) (reg exp))
+    (branch (label eval-self-evaluating))
+
+    (test (op expression-variable?) (reg exp))
+    (branch (label eval-variable))
+
+    (test (op expression-quoted?) (reg exp))
+    (branch (label eval-quoted))
+
+    (test (op expression-if?) (reg exp))
+    (branch (label eval-if))
+
+    (test (op expression-cond?) (reg exp))
+    (branch (label eval-cond))
+
+    (test (op expression-assignment?) (reg exp))
+    (branch (label eval-assignment))
+
+    (test (op expression-definition?) (reg exp))
+    (branch (label eval-definition))
+
+    (test (op expression-lambda?) (reg exp))
+    (branch (label eval-lambda))
+
+    (test (op expression-begin?) (reg exp))
+    (branch (label eval-begin))
+
+    (test (op expression-application?) (reg exp))
+    (branch (label eval-application))
+
+    (goto (label unknown-expression-type))
+
+
+
+; (define (expression-cond? exp)
+;     (tagged-list? exp 'cond))
+;
+;
+; (define (cond-clauses exp) (cdr exp))
+;
+;
+; (define (cond-first-clause clauses) (car clauses))
+;
+;
+; (define (cond-rest-clauses clauses) (cdr clauses))
+;
+;
+; (define (cond-no-clause? clauses) (null? clauses))
+;
+;
+; (define (cond-else-clause? clause) (tagged-list? clause 'else))
+;
+;
+; (define (cond-clause-predicate clause) (car clause))
+;
+;
+; (define (cond-clause-expressions clause) (cdr clause))
+eval-cond
+    (assign unev (op cond-clauses) (reg exp))
+    (save continue)
+
+
+eval-cond-loop-part1
+    (test (op cond-no-clause?) (reg unev))
+    (branch (label eval-cond-done))
+
+    (assign exp (op cond-first-clause) (reg unev))
+    (assign unev (op cond-rest-clause) (reg unev))
+
+    (test (op cond-else-clause?) (reg exp))
+    (branch (label eval-cond-else-clause))
+
+    (save unev)
+    (save exp)
+    (save env)
+
+    (assign exp (op cond-clause-predicate) (reg exp))
+    (assign continue (label eval-cond-loop-part2))
+    (goto (label eval))
+
+
+eval-cond-loop-part2 ; after evaluating the predicate
+    ;     test instruction do not accept register as input
+    ; but only accepts operation. Therefore we have to use
+    ; a dummy operation to make it satisfied:
+    ;     (define (identity x) x)
+    (test (op identity) (reg val))
+    (branch (label eval-cond-loop-part3)
+
+    (restore env)
+    (restore exp)
+    (restore unev)
+
+    (goto (label eval-cond-loop-part1))
+
+
+eval-cond-loop-part3 ; the predicate is true
+    (restore env)
+    (restore exp)
+
+    (assign exp (op cond-clause-expressions) exp)
+    (assign exp (op sequence->exp) (reg exp))
+    (assign continue (label eval-cond-loop-part4))
+    (goto (label eval-begin))
+
+
+eval-cond-loop-part4 ; after evaluating clause expressions
+    (restore unev) ; clear all stack contents saved in "eval-cond"
+
+    (goto (label eval-cond-done))
+
+
+eval-cond-else-clause
+    (assign exp (op cond-clause-expressions) (reg exp))
+    (assign exp (op sequence->exp) (reg exp))
+    (restore continue)
+    (goto (label eval-begin))
+
+
+eval-cond-done
+    (restore continue)
+    (goto (reg continue))
