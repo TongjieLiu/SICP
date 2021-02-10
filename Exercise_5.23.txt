@@ -1,0 +1,141 @@
+; An exercise solution for the SICP, 2nd edition
+;
+; Copyright (C) 2021 Tongjie Liu <tongjieandliu@gmail.com>.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+; try to implement "cond" and "let" in this exercise
+eval
+    (test (op expression-self-evaluating?) (reg exp))
+    (branch (label eval-self-evaluating))
+
+    (test (op expression-variable?) (reg exp))
+    (branch (label eval-variable))
+
+    (test (op expression-quoted?) (reg exp))
+    (branch (label eval-quoted))
+
+    (test (op expression-if?) (reg exp))
+    (branch (label eval-if))
+
+    (test (op expression-cond?) (reg exp))
+    (branch (label eval-cond))
+
+    (test (op expression-assignment?) (reg exp))
+    (branch (label eval-assignment))
+
+    (test (op expression-definition?) (reg exp))
+    (branch (label eval-definition))
+
+    (test (op expression-lambda?) (reg exp))
+    (branch (label eval-lambda))
+
+    (test (op expression-begin?) (reg exp))
+    (branch (label eval-begin))
+
+    (test (op expression-application?) (reg exp))
+    (branch (label eval-application))
+
+    (test (op expression-let?) (reg exp))
+    (branch (label eval-let))
+
+    (goto (label unknown-expression-type))
+
+
+
+; (define (expression-cond? exp)
+;     (tagged-list? exp 'cond))
+;
+;
+; (define (cond-clauses exp) (cdr exp))
+;
+;
+; (define (cond-first-clause clauses) (car clauses))
+;
+;
+; (define (cond-rest-clauses clauses) (cdr clauses))
+;
+;
+; (define (cond-no-clause? clauses) (null? clauses))
+;
+;
+; (define (cond-else-clause? clause) (tagged-list? clause 'else))
+;
+;
+; (define (cond-clause-predicate clause) (car clause))
+;
+;
+; (define (cond-clause-expressions clause) (cdr clause))
+;
+;
+;
+; (define (cond->if exp)
+;     (define (iter clauses)
+;         (if (cond-no-clause? clauses)
+;             'false
+;             (let ((first (cond-first-clause clauses))
+;                   (rest (cond-rest-clauses clauses)))
+;                 (if (cond-else-clause? first)
+;                     (if (cond-no-clause? rest)
+;                         (sequence->exp (cond-clause-expressions clause))
+;                         (error "EVAL: else clause is not the last in let"))
+;                     (make-if (cond-clause-predicate first)
+;                              (sequence->exp (cond-clause-expressions first))
+;                              (iter rest))))))
+;
+;     (iter (cond-clauses exp)))
+eval-cond
+    (assign exp (op if->cond) (reg exp))
+    (goto (label eval-if))
+
+
+
+
+; (define (expression-let? exp)
+;     (tagged-list? exp 'let))
+;
+;
+; (define (let-bindings exp) (cadr exp))
+;
+;
+; (define (let-parameters exp)
+;     (map (lambda (binding) (car binding))
+;          (let-bingings exp)))
+;
+;
+; (define (let-arguments exp)
+;     (map (lambda (binding) (cadr binding))
+;          (let-bindings exp)))
+;
+;
+; (define (let-body exp) (caddr exp))
+;
+;
+; 
+; (define (let-get-lambda exp)
+;     (make-lambda (let-parameters exp)
+;                  (let-body exp)))
+;
+;
+;
+; (define (make-application operator operands)
+;     (cons operator operands))
+;
+;
+; (define (let->application exp)
+;     (make-application (let-get-lambda exp)
+;                       (let-arguments exp)))
+eval-let
+    (assign exp (op let->application) (reg exp))
+    (goto (label eval-application))
