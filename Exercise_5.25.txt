@@ -1,0 +1,235 @@
+; An exercise solution for the SICP, 2nd edition
+;
+; Copyright (C) 2021 Tongjie Liu <tongjieandliu@gmail.com>.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+; (define (delay exp env)
+;     (list 'thunk exp env))
+;
+;
+; (define (thunk? obj) (tagged-list? obj 'thunk))
+;
+;
+; (define (thunk-exp obj) (cadr obj))
+;
+;
+; (define (thunk-env obj) (caddr obj))
+;
+;
+;
+; (define (evaluated-thunk? obj) (tagged-list? obj 'ethunk))
+;
+;
+; (define (evaluated-thunk-value ethunk) (cadr ethunk))
+;
+; "exp": input expression 
+; "env": input environment
+; "val": return value
+actual-value
+    (save continue)
+    (assign continue (label actual-value-after-eval))
+    (goto (label eval))
+actual-value-after-eval
+    (assign unev (reg val))
+    (restore continue)
+    (goto (label force))
+
+
+
+; "unev": input object
+; "val": return value
+force
+    (test (op thunk?) (reg unev))
+    (branch (label force-thunk))
+
+    (test (op evaluated-thunk?) (reg unev))
+    (branch (label force-evaluated-thunk))
+
+    (assign val (reg unev))
+    (goto (reg continue))
+
+
+force-thunk
+    (save continue)
+    (save unev)
+
+    (assign exp (op thunk-exp) (reg unev))
+    (assign env (op thunk-env) (reg unev))
+    (assign continue (label force-thunk-after-actual-value))
+    (goto (label actual-value))
+
+
+force-thunk-after-actual-value
+    (restore unev)
+
+    (perform (op set-car!) (reg unev) (const ethunk))
+    (assign exp (op cdr) (reg unev))
+    (perform (op set-car!) (reg exp) (reg val))
+    (perform (op set-cdr!) (reg exp) (reg ()))
+
+    (restore continue)
+    (goto (reg continue))
+
+
+force-evaluated-thunk
+    (assign val (op evaluated-thunk-value) (reg unev))
+    (goto (reg continue))
+
+
+
+
+; (define (application-operator app) (car app))
+;
+;
+; (define (application-operands app) (cdr app))
+eval-application
+    (assign unev (op procedure-operands) (reg exp))
+    (assign exp (op procedure-operator) (reg exp))
+
+    (save continue)
+    (save env)
+    (save unev)
+
+    (assign continue (label eval-application-after-actual-value))
+    (goto (label actual-value))
+
+
+eval-application-after-actual-value
+    (assign proc (reg val))
+
+    (restore unev)
+    (restore env)
+    (restore continue)
+
+    (goto (label apply))
+
+
+
+
+; (define (operand-list-empty? olist) (null? olist))
+;
+;
+; (define (operand-list-first-operand olist) (car olist))
+;
+;
+; (define (operand-list-rest-operands olist) (cdr olist))
+;
+;
+; (define (make-empty-operand-list) '())
+apply
+    (test (op primitive-procedure?) (reg proc))
+    (branch (label apply-primitive-procedure))
+
+    (test (op compound-procedure?) (reg proc))
+    (branch (label apply-compound-procedure))
+
+    (goto (label unknown-procedure-type))
+
+
+
+apply-primitive-procedure
+    (save continue)
+    (save proc)
+
+    (assign argl (op make-empty-operand-list))
+
+
+apply-primitive-procedure-loop ; handles argument evaluation
+    (test (op operand-list-empty?) unev)
+    (branch (label apply-primitive-procedure-continue))
+
+    (save env)
+    (save unev)
+    (save argl)
+
+    (assign exp (op operand-list-first-operand) (reg unev))
+    (assign continue (label apply-primitive-procedure-loop-continue))
+    (goto (label actual-value))
+
+
+apply-primitive-procedure-loop-continue
+    (restore argl)
+    (restore unev)
+    (restore env)
+
+    (assign argl (op adjoin-arg) (reg val) (reg argl))
+    (assign unev (op operand-list-rest-operands) (reg unev))
+
+    (goto (label apply-primitive-procedure-loop))
+
+
+apply-primitive-procedure-continue
+    (restore proc)
+    (restore continue)
+
+    (assign val (op apply-primitive-procedure) (reg proc) (reg argl))
+
+    (goto (reg continue))
+
+
+
+apply-compound-procedure
+    (assign argl (op make-empty-operand-list))
+
+
+apply-compound-procedure-loop
+    (test (op operand-list-empty?) unev)
+    (branch (label apply-compound-procedure-continue))
+
+    (assign exp (op operand-list-first-operand) (reg unev))
+    (assign exp (op delay) (reg exp) (reg env))
+
+    (assign argl (op adjoin-arg) (reg exp) (reg argl))
+    (assign unev (op operand-list-rest-operands) (reg unev))
+
+    (goto (label apply-compoud-procedure-loop))
+
+
+apply-compound-procedure-continue
+    (assign env (op procedure-environment) (reg proc))
+    (assign unev (op procedure-parameters) (reg proc))
+    (assign env (op extend-environment) (reg unev) (reg argl) (reg env))
+
+    (assign unev (op procedure-body) (reg proc))
+    (goto (label eval-sequence))
+
+
+
+
+eval-if
+    (save continue)
+    (save env)
+    (save exp)
+
+    (assign exp (op if-predicate) (reg exp))
+    (assign continue (label eval-if-after-actual-value))
+    (goto (label actual-value))
+
+
+eval-if-after-actual-value
+    (restore exp)
+    (restore env)
+    (restore continue)
+
+    (test (op true?) (reg val))
+    (branch (label eval-if-consequent))
+
+    (assign exp (op if-alternative) (reg exp))
+    (goto (label eval))
+
+
+eval-if-consequent
+    (assign exp (op if-consequent) (reg exp))
+    (goto (label eval))
