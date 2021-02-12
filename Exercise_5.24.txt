@@ -119,7 +119,7 @@ eval-cond-loop-part3 ; the predicate is true
     (assign exp (op cond-clause-expressions) exp)
     (assign exp (op sequence->exp) (reg exp))
     (assign continue (label eval-cond-loop-part4))
-    (goto (label eval-begin))
+    (goto (label eval))
 
 
 eval-cond-loop-part4 ; after evaluating clause expressions
