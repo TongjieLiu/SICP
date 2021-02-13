@@ -89,7 +89,7 @@ eval
 ;                 (if (cond-else-clause? first)
 ;                     (if (cond-no-clause? rest)
 ;                         (sequence->exp (cond-clause-expressions clause))
-;                         (error "EVAL: else clause is not the last in let"))
+;                         (error "EVAL: else clause is not the last in cond"))
 ;                     (make-if (cond-clause-predicate first)
 ;                              (sequence->exp (cond-clause-expressions first))
 ;                              (iter rest))))))
