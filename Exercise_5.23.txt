@@ -44,11 +44,11 @@ eval
     (test (op expression-begin?) (reg exp))
     (branch (label eval-begin))
 
-    (test (op expression-application?) (reg exp))
-    (branch (label eval-application))
-
     (test (op expression-let?) (reg exp))
     (branch (label eval-let))
+
+    (test (op expression-application?) (reg exp))
+    (branch (label eval-application))
 
     (goto (label unknown-expression-type))
 
