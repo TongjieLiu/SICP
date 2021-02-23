@@ -2208,8 +2208,6 @@ eval-load
 				        (expression-register-analyze machine arg))
 				    ((expression-constant? arg)
 				        (expression-constant-analyze arg))
-				    ((expression-label? arg)
-				        (expression-label-analyze arg labels))
 				    (else (error "ASSEMBLE: illegal operation argument format:"
 						 arg))))
 			  (expression-operation-arguments exp))))
