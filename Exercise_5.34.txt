@@ -1,0 +1,323 @@
+; An exercise solution for the SICP, 2nd edition
+;
+; Copyright (C) 2021 Tongjie Liu <tongjieandliu@gmail.com>.
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+    There are 3 essential differences between the code for iterative 
+and recursive versions of factorial that makes one process build up
+stack space and the other run in constant stack space.
+
+    And they are marked in the comments of the 2 version of resulting
+codes shown below as:
+    #1 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+    #2 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+    #3 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+
+
+
+
+1. Iterative "factorial"("iter" is the recursive procedure here):
+        (assign val (label procedure-entry-point1))
+        (assign val (op make-compiled-procedure) (reg val) (reg env))
+        (goto (label lambda-done0))
+
+; procedure body of "factorial"
+procedure-entry-point1
+        (assign env (op compiled-procedure-environment) (reg proc))
+        (assign env (op environment-extend) (reg env) (const (n)) (reg argl))
+        (assign val (label procedure-entry-point6))
+        (assign val (op make-compiled-procedure) (reg val) (reg env))
+        (goto (label lambda-done5))
+
+; procedure body of "iter"
+procedure-entry-point6
+        (assign env (op compiled-procedure-environment) (reg proc))
+        (assign env (op environment-extend) (reg env) (const (product counter)) (reg argl))
+
+        ;;; The evaluation of if's predicate starts
+        (save continue)
+        (save env)
+        (assign proc (op environment-lookup-binding) (reg env) (const >))
+        (assign val (op environment-lookup-binding) (reg env) (const n))
+        (assign argl (op list) (reg val))
+        (assign val (op environment-lookup-binding) (reg env) (const counter))
+        (assign argl (op cons) (reg val) (reg argl))
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure21))
+apply-compiled-procedure20
+        (assign continue (label apply-done19))
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure21
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+apply-done19
+        (restore env)
+        (restore continue)
+
+        (test (op false?) (reg val))
+        (branch (label if-alternative8))
+if-consequent9
+        ;;; "iter" ends here, the entire "factorial" ends here
+        (assign val (op environment-lookup-binding) (reg env) (const product))
+        (goto (reg continue))
+if-alternative8
+        ;;; the recursive procedure call of "iter" starts
+        (assign proc (op environment-lookup-binding) (reg env) (const iter))
+        (save continue)
+        (save proc)
+
+        ;;; the evaluation of the first argument(from right to left) starts
+        (save env)
+        (assign proc (op environment-lookup-binding) (reg env) (const +))
+        (assign val (const 1))
+        (assign argl (op list) (reg val))
+        (assign val (op environment-lookup-binding) (reg env) (const counter))
+        (assign argl (op cons) (reg val) (reg argl))
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure18))
+apply-compiled-procedure17
+        (assign continue (label apply-done16))
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure18
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+apply-done16
+        (assign argl (op list) (reg val))
+        (restore env)
+
+        ;;; the evaluation of the second argument(from right to left) starts
+        (save argl)
+        (assign proc (op environment-lookup-binding) (reg env) (const *))
+        (assign val (op environment-lookup-binding) (reg env) (const product))
+        (assign argl (op list) (reg val))
+        (assign val (op environment-lookup-binding) (reg env) (const counter))
+        (assign argl (op cons) (reg val) (reg argl))
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure15))
+apply-compiled-procedure14
+        (assign continue (label apply-done13))
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure15
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+apply-done13
+        ;;; #3 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;; "argl" is restored out of stack before calling "iter"
+        (restore argl)
+
+        (assign argl (op cons) (reg val) (reg argl))
+
+        ;;; #2 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;; "proc" is restored out of stack before calling "iter"
+        (restore proc)
+
+        ;;; #1 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;; "continue" is restored out of stack before calling "iter"
+        (restore continue)
+
+        ;;;     the ACTUAL recursive procedure call of "iter" starts after
+        ;;; the evaluation of all two arguments
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure12))
+
+        ;;;     "iter" is a compiled procedure, therefore it proceeds with
+        ;;; the "apply-compiled-procedure11" branch
+apply-compiled-procedure11
+        ;;;     The last expression in a procedure body always has "return" as
+        ;;; its linkage. Therefore, register "continue" will keep its old value
+        ;;; assigned before "iter" was first called during each recursive call
+        ;;; of "iter".
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+
+apply-primitive-procedure12
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+        (goto (reg continue))
+apply-done10
+if-done7
+lambda-done5
+        ;;;     make new binding for "iter" after finishing the evaluation of
+        ;;; definition value expression, in this case a lambda expression
+        (perform (op environment-add-binding) (reg env) (const iter) (reg val))
+        (assign val (reg val))
+
+        ;;; (iter 1 1)
+        (assign proc (op environment-lookup-binding) (reg env) (const iter))
+        (assign val (const 1))
+        (assign argl (op list) (reg val))
+        (assign val (const 1))
+        (assign argl (op cons) (reg val) (reg argl))
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure4))
+apply-compiled-procedure3
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure4
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+        (goto (reg continue))
+apply-done2
+lambda-done0
+
+        ;;;     make new binding for "factorial" after finishing the evaluation of
+        ;;; definition value expression, in this case a lambda expression
+        (perform (op environment-add-binding) (reg env) (const factorial) (reg val))
+        (assign val (reg val))
+
+
+
+
+2. Recursive "factorial"("factorial" is the recursive procedure here):
+        (assign val (label procedure-entry-point1))
+        (assign val (op make-compiled-procedure) (reg val) (reg env))
+        (goto (label lambda-done0))
+        ; "factorial"'s body
+procedure-entry-point1
+        ; change into new environment
+        (assign env (op compiled-procedure-environment) (reg proc))
+        (assign env (op environment-extend) (reg env) (const (n)) (reg argl))
+
+        ;;; The evaluation of if's predicate starts
+        (save continue)
+        (save env)
+        (assign proc (op environment-lookup-binding) (reg env) (const =))
+        (assign val (const 1))
+        (assign argl (op list) (reg val))
+        (assign val (op environment-lookup-binding) (reg env) (const n))
+        (assign argl (op cons) (reg val) (reg argl))
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure16))
+apply-compiled-procedure15
+        (assign continue (label apply-done14))
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure16
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+apply-done14
+        (restore env)
+        (restore continue)
+
+        (test (op false?) (reg val))
+        (branch (label if-alternative3))
+
+        ;;;     DIFFERENCE: "factorial" does not end here, and it returns
+        ;;; to label "apply-done8"
+if-consequent4
+        (assign val (const 1))
+        (goto (reg continue))
+
+if-alternative3
+        (assign proc (op environment-lookup-binding) (reg env) (const *))
+
+        ;;; #1 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;;     "continue" is saved into the stack, but not restored until "factorial"
+        ;;; returns, and when each time "factorial" was called, a new value of it
+        ;;; will be accumulated in the stack.
+        (save continue)
+
+        ;;; #2 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;;     "proc" is saved into the stack, but not restored until "factorial"
+        ;;; returns, and when each time "factorial" was called, a new value of it
+        ;;; will be accumulated in the stack.
+        (save proc)
+
+        (assign val (op environment-lookup-binding) (reg env) (const n))
+        (assign argl (op list) (reg val))
+
+        ;;; the recursive procedure call of "factorial" starts
+        ;;;
+        ;;; #3 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;;     "argl" is saved into the stack, but not restored until "factorial"
+        ;;; returns, and when each time "factorial" was called, a new value of it
+        ;;; will be accumulated in the stack. Now, "argl" contains the value of
+        ;;; variable "n", i.e. the first argument of the application of "*".
+        (save argl)
+
+        (assign proc (op environment-lookup-binding) (reg env) (const factorial))
+        (save proc)
+
+        ;;; the evaluation of the argument starts
+        (assign proc (op environment-lookup-binding) (reg env) (const -))
+        (assign val (const 1))
+        (assign argl (op list) (reg val))
+        (assign val (op environment-lookup-binding) (reg env) (const n))
+        (assign argl (op cons) (reg val) (reg argl))
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure13))
+apply-compiled-procedure12
+        (assign continue (label apply-done11))
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure13
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+apply-done11
+        (assign argl (op list) (reg val))
+        (restore proc)
+
+        ;;; "factorial" tries to call itself
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure10))
+
+        ;;;     "factorial" is a compiled procedure, therefore it proceeds with
+        ;;; the "apply-compiled-procedure9" branch
+apply-compiled-procedure9
+        ;;; DIFFERENCE: assign "continue" a new value for its return
+        (assign continue (label apply-done8))
+
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+
+apply-primitive-procedure10
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+apply-done8
+        ;;; #3 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;; "argl" is restored after the recursive call of "factorial" returns
+        (restore argl)
+
+        (assign argl (op cons) (reg val) (reg argl))
+
+        ;;; #2 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;; "proc" is restored after the recursive call of "factorial" returns
+        (restore proc)
+
+        ;;; #1 [ESSENTIAL DIFFERENCE THAT CAUSES DIFFERENT STACK SPACES]
+        ;;; "continue" is restored after the recursive call of "factorial" returns
+        (restore continue)
+
+        ;;; the application of  "*" starts
+        (test (op primitive-procedure?) (reg proc))
+        (branch (label apply-primitive-procedure7))
+apply-compiled-procedure6
+        (assign val (op compiled-procedure-entry) (reg proc))
+        (goto (reg val))
+apply-primitive-procedure7
+        (assign val (op primitive-procedure-implementation) (reg proc))
+        (assign val (op simple-apply) (reg val) (reg argl))
+        (goto (reg continue))
+apply-done5
+if-done2
+lambda-done0
+
+        ;;;     make new binding for "factorial" after finishing the evaluation of
+        ;;; definition value expression, in this case a lambda expression
+        (perform (op environment-add-binding) (reg env) (const factorial) (reg val))
+        (assign val (reg val))
