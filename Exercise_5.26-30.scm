@@ -241,8 +241,8 @@
 			      application-operator)
 			(list 'application-operands
 			      application-operands)
-			(list 'application-no-operands?
-			      application-no-operands?)
+			(list 'application-no-operand?
+			      application-no-operand?)
 			(list 'application-first-operand
 			      application-first-operand)
 			(list 'application-rest-operands
@@ -652,7 +652,7 @@ eval-application-after-eval-operator
 
 
 eval-application-operands-loop
-    (test (op application-no-operands?) (reg unev))
+    (test (op application-no-operand?) (reg unev))
     (branch (label apply))
 
     (save argl)
@@ -1070,7 +1070,7 @@ eval-load
 (define (application-operands exp) (cdr exp))
 
 
-(define (application-no-operands? operands) (null? operands))
+(define (application-no-operand? operands) (null? operands))
 
 
 (define (application-first-operand operands) (car operands))
