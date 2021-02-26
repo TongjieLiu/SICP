@@ -361,7 +361,7 @@
 
 (define (compile-application-argument-list operands)
     (let ((args (reverse operands)))
-        (if (null? args)
+        (if (application-no-operand? args)
 	    (make-instruction-sequence
 	        '()
 		'(argl)
@@ -369,16 +369,17 @@
 	    (instruction-sequence-preserve
 	        '(env)
 		(instruction-sequence-append
-		    (compile (car args) 'val 'next)
+		    (compile (application-first-operand args) 'val 'next)
 		    (make-instruction-sequence
 		        '(val)
 			'(argl)
 			'((assign argl (op list) (reg val)))))
-		(compile-application-argument-list-continue (cdr args))))))
+		(compile-application-argument-list-continue
+		    (application-rest-operands args))))))
 
 
 (define (compile-application-argument-list-continue args)
-    (if (null? args)
+    (if (application-no-operand? args)
 	the-empty-instruction-sequence
 	(instruction-sequence-preserve
 	    '(env) ;     "the-empty-instruction-sequence" needs no register,
@@ -386,12 +387,13 @@
 	           ; final argument.
 	    (instruction-sequence-preserve
 	        '(argl)
-		(compile (car args) 'val 'next)
+		(compile (application-first-operand args) 'val 'next)
 		(make-instruction-sequence
 		    '(argl val)
 		    '(argl)
 		    '((assign argl (op cons) (reg val) (reg argl)))))
-	    (compile-application-argument-list-continue (cdr args)))))
+	    (compile-application-argument-list-continue
+	        (application-rest-operands args)))))
 
 
 (define (compile-application-apply target linkage)
@@ -572,7 +574,7 @@
 (define (application-operands exp) (cdr exp))
 
 
-(define (application-no-operands? operands) (null? operands))
+(define (application-no-operand? operands) (null? operands))
 
 
 (define (application-first-operand operands) (car operands))
