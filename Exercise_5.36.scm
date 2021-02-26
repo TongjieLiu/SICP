@@ -18,15 +18,27 @@
 ;    The compiler is right-to-left in the evaluation of operands. We can
 ; modify its behavior to left-to-right by making the following changes:
 (define (compile-application-argument-list operands)
-   (instruction-sequence-append
-       (make-instruction-sequence
-	   '()
-           '(argl)
-           '((assign argl (const ()))))
-       (do-compile-application-argument-list operands)))
+    (if (application-no-operand? operands)
+        (make-instruction-sequence
+	    '()
+            '(argl)
+            '((assign argl (const ()))))
+	(instruction-sequence-preserve
+	    '(env) ;     "the-empty-instruction-sequence" needs no register,
+	           ; therefore "env" will never be "saved" in evaluating any
+	           ; final argument.
+            (instruction-sequence-append
+		(compile (application-first-operand operands) 'val 'next)
+		(make-instruction-sequence
+		    '(val)
+		    '(argl)
+		    '((assign argl (op list) (reg val)))))
+	    (compile-application-argument-list-continue
+	        (application-rest-operands operands)))))
 
 
-(define (do-compile-application-argument-list operands)
+
+(define (compile-application-argument-list-continue operands)
     (if (application-no-operand? operands)
 	the-empty-instruction-sequence
 	(instruction-sequence-preserve
@@ -40,7 +52,7 @@
 		    '(argl val)
 		    '(argl)
 		    '((assign argl (op adjoin) (reg argl) (reg val)))))
-	    (do-compile-application-argument-list
+	    (compile-application-argument-list-continue
 	        (application-rest-operands operands)))))
 
 
@@ -52,7 +64,6 @@
 ; of a list.
 ;
 ;     From the implementation of "adjoin" in the book, we can see that
-; it is slower than "cons". Additionally, we need to initialize "argl"
-; to the empty list first.
+; it is slower than "cons".
 (define (adjoin alist item)
     (append alist (list item)))
