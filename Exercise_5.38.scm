@@ -15,6 +15,11 @@
 ; You should have received a copy of the GNU General Public License
 ; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+(load "Exercise_5.33.scm")
+
+
+
+
 (define SUPPORTED-OPEN-CODING-OPERATIONS '(= * - +))
 (define GENERALIZED-OPEN-CODING-OPERATIONS '(+ *))
 

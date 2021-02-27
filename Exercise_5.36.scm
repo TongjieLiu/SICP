@@ -15,6 +15,11 @@
 ; You should have received a copy of the GNU General Public License
 ; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+(load "Exercise_5.33.scm")
+
+
+
+
 ;    The compiler is right-to-left in the evaluation of operands. We can
 ; modify its behavior to left-to-right by making the following changes:
 (define (compile-application-argument-list operands)
