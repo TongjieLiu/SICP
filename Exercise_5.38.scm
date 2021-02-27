@@ -87,12 +87,13 @@
 
 
 (define (spread-arguments args op-iseq)
-    (instruction-sequence-append
+    (instruction-sequence-preserve
+        '(env continue)
         (compile (application-first-operand args)
 		 'arg1
 		 'next)
 	(instruction-sequence-preserve
-	    '(arg1)
+	    '(arg1 env continue)
 	    (compile (application-first-operand
 	                 (application-rest-operands args))
 		     'arg2
@@ -114,7 +115,7 @@
 
 (define (spread-first-argument args op-iseq)
     (instruction-sequence-preserve
-	'(arg1)
+	'(arg1 env continue)
 	(compile (application-first-operand args)
 		 'arg2
 		 'next)
