@@ -1752,9 +1752,8 @@ eval-load
 ; simulator interface #9
 (define (machine-trace-register-on machine reg-name)
     ;     Most registers are not allocated before the first time we "start"
-    ; the machine. For this reason we have to allocate them when we turn
-    ; the register trace "on" if we want to do this before all runnings of
-    ; the machine start.
+    ; the machine. For this reason, first, we have to allocate the requested
+    ; register, then we can turn its trace option "on" as we need.
     (let ((reg (machine-allocate-register machine reg-name)))
         ((reg 'trace) 'on)))
 
