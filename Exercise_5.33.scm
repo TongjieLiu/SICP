@@ -430,7 +430,7 @@
 
 (define (compile-application-apply-compiled-procedure target linkage)
     (cond ((and (not (eq? target 'val)) (eq? linkage 'return))
-	      (error "COMPILE: compiled procedure return not with target val"))
+	      (error "COMPILE: compiled procedure returns but target isn't val"))
 	  ((and (eq? target 'val) (eq? linkage 'return))
 	      (make-instruction-sequence
 		  '(proc continue)
