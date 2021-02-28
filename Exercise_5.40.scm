@@ -262,67 +262,6 @@
 		ct-env))))
 
 
-(define (compile-application-apply target linkage)
-    (let ((primitive-procedure-label (make-compiler-label 'apply-primitive-procedure))
-	  (compiled-procedure-label (make-compiler-label 'apply-compiled-procedure))
-	  (done-label (make-compiler-label 'apply-done)))
-        (let ((compiled-procedure-linkage (if (eq? linkage 'next)
-					      done-label
-					      linkage)))
-            (instruction-sequence-append
-	        (make-instruction-sequence
-	            '(proc)
-		    '()
-		    `((test (op primitive-procedure?) (reg proc))
-		      (branch (label ,primitive-procedure-label))))
-		(instruction-sequence-parallel
-		    (instruction-sequence-append
-		        compiled-procedure-label
-		        (compile-application-apply-compiled-procedure
-		            target
-		            compiled-procedure-linkage))
-		    (attach-linkage
-		        linkage
-	                (make-instruction-sequence
-	                    '(proc argl)
-		            `(,target)
-		            `(,primitive-procedure-label
-			      (assign ,target (op primitive-procedure-implementation)
-				                  (reg proc))
-		              (assign ,target (op simple-apply)
-				                  (reg ,target) (reg argl))))))
-	        done-label))))
-
-
-(define (compile-application-apply-compiled-procedure target linkage)
-    (cond ((and (not (eq? target 'val)) (eq? linkage 'return))
-	      (error "COMPILE: compiled procedure return not with target val"))
-	  ((and (eq? target 'val) (eq? linkage 'return))
-	      (make-instruction-sequence
-		  '(proc continue)
-		  ALL-REGISTERS
-		  '((assign val (op compiled-procedure-entry) (reg proc))
-		    (goto (reg val)))))
-	  ((and (eq? target 'val) (not (eq? linkage 'return)))
-	      (make-instruction-sequence
-		  '(proc)
-		  ALL-REGISTERS
-		  `((assign continue (label ,linkage))
-		    (assign val (op compiled-procedure-entry) (reg proc))
-		    (goto (reg val)))))
-	  (else (let ((after-proc-ret-label
-			 (make-compiler-label 'after-procedure-return)))
-	            (make-instruction-sequence
-		        '(proc)
-		        ALL-REGISTERS
-		        `((assign continue (label ,after-proc-ret-label))
-			  (assign val (op compiled-procedure-entry) (reg proc))
-			  (goto (reg val))
-			  ,after-proc-ret-label
-			  (assign ,target (reg val))
-			  (goto (label ,linkage))))))))
-
-
 
 
 ; compile-time environment representation
