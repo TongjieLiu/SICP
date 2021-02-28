@@ -751,7 +751,7 @@
 
 
 
-; compiler insterface #2
+; compiler interface #2
 (define (print-statements iseq)
     (for-each (lambda (item)
 		  (if (not (symbol? item))
