@@ -310,7 +310,7 @@
     (let ((ecc #f))
         (define (set-ecc ecc-object)
 	    (if ecc
-		(error "ECEVAL ERROR: ecc had been already setted")
+		(error "ECEVAL ERROR: ecc had been already set")
 		(set! ecc ecc-object)))
 
 	(define (report error-messages)
